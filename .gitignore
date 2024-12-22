@@ -1,4 +1,3 @@
-**/.vscode/**
 **/.cache/**
 **/__pycache__/**
 
@@ -15,5 +14,7 @@
 
 **/.zig-cache/**
 **/zig-out/**
+
+**/pdbs/**
 
 00_docs/

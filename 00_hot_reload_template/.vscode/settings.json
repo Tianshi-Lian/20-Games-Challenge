@@ -1,0 +1,10 @@
+{
+    "triggerTaskOnSave.on": true,
+    "triggerTaskOnSave.tasks": {
+        "BuildReload": [
+            "src/**/*.odin"
+        ]
+    },
+    "triggerTaskOnSave.restart": true,
+    "triggerTaskOnSave.delay": 50
+}
