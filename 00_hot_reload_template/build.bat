@@ -15,6 +15,12 @@ if not exist build\assets (
 	mkdir build\assets
 )
 
+if not exist tools\atlas_builder\atlas_builder.exe (
+    pushd tools
+    call build.bat
+    popd
+)
+
 call tools\atlas_builder\atlas_builder.exe
 
 if "%TYPE%" == "dbg" (

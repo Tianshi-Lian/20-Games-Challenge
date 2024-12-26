@@ -36,7 +36,14 @@ draw :: proc() {
 
     rl.ClearBackground({150, 190, 220, 255})
 
-    rl.DrawTexture(g_mem.texture, i32(g_mem.position.x), i32(g_mem.position.y), {255, 255, 255, 255})
+    rl.DrawTexturePro(
+        g_mem.texture,
+        atlas_textures[.Test].rect,
+        {g_mem.position.x, g_mem.position.y, atlas_textures[.Test].rect.width, atlas_textures[.Test].rect.height},
+        {0, 0},
+        0,
+        {255, 255, 255, 255},
+    )
     rl.DrawFPS(WINDOW_WIDTH - 100, 10)
 }
 
@@ -60,7 +67,7 @@ game_init :: proc() {
     g_mem = new(Game_Memory)
 
     g_mem^ = Game_Memory {
-        texture  = rl.LoadTexture("assets/test.png"),
+        texture  = rl.LoadTexture("assets/atlas.png"),
         position = {0, 0},
     }
 
