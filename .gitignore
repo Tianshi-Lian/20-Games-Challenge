@@ -17,5 +17,7 @@
 
 **/pdbs/**
 
-**/tools/**/*.exe
 00_docs/
+**/tools/**/*.exe
+**/atlas.png
+**/atlas.odin
