@@ -131,22 +131,6 @@ main :: proc() {
         reload := force_reload || force_restart
         game_dll_mod, game_dll_mod_err := os.last_write_time_by_name("game" + DLL_EXT)
 
-        // for f in file_versions {
-        //     if mod, mod_err := os.last_write_time_by_name(f.path); mod_err == os.ERROR_NONE {
-        //         if mod != f.modification_time {
-        //             libc.system("pushd ..")
-        //             reload_error := libc.system("pushd && ./build_hot_reload.bat && popd")
-        //             fmt.println("cwd: ", os.get_current_directory())
-        //             libc.system("popd")
-        //             if reload_error != 0 {
-        //                 fmt.println("Failed to build game")
-        //             } else {
-        //                 fmt.println("Rebuilt game")
-        //             }
-        //         }
-        //     }
-        // }
-
         if game_dll_mod_err == os.ERROR_NONE && game_api.modification_time != game_dll_mod {
             reload = true
         }

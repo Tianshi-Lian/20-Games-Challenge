@@ -28,9 +28,9 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 
-PACKAGE_NAME :: "main"
+PACKAGE_NAME :: "game"
 TEXTURES_DIR :: "assets/textures"
-VERSION_ODIN_OUTPUT_PATH :: "src/reload_exe/file_version.odin"
+VERSION_ODIN_OUTPUT_PATH :: "src/game/file_version.odin"
 
 dir_path_to_file_infos :: proc(path: string) -> []os.File_Info {
     d, derr := os.open(path, os.O_RDONLY)

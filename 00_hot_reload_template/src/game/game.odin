@@ -14,18 +14,27 @@
 
 package game
 
+import "core:c/libc"
+import "core:os"
+
 import rl "vendor:raylib"
 
 Rect :: rl.Rectangle
 
-WINDOW_WIDTH :: 1280
-WINDOW_HEIGHT :: 720
+Game_State :: enum {
+    menu,
+    playing,
+    game_over,
+}
 
 Game_Memory :: struct {
-    texture:  rl.Texture2D,
-    position: rl.Vector2,
+    texture_atlas: rl.Texture2D,
 }
 g_mem: ^Game_Memory
+
+WINDOW_WIDTH :: 1600
+WINDOW_HEIGHT :: 900
+
 
 update :: proc() {
 }
@@ -36,19 +45,23 @@ draw :: proc() {
 
     rl.ClearBackground({150, 190, 220, 255})
 
-    rl.DrawTexturePro(
-        g_mem.texture,
-        atlas_textures[.Test].rect,
-        {g_mem.position.x, g_mem.position.y, atlas_textures[.Test].rect.width, atlas_textures[.Test].rect.height},
-        {0, 0},
-        0,
-        {255, 255, 255, 255},
-    )
+    rl.DrawTextureRec(g_mem.texture_atlas, atlas_textures[.Test].rect, {0, 0}, rl.WHITE)
+
     rl.DrawFPS(WINDOW_WIDTH - 100, 10)
 }
 
 @(export)
 game_update :: proc() -> bool {
+    if ODIN_DEBUG {
+        for f in file_versions {
+            if mod, mod_err := os.last_write_time_by_name(f.path); mod_err == os.ERROR_NONE {
+                if mod != f.modification_time {
+                    libc.system("pushd .. && build_hot_reload.bat && popd")
+                    break
+                }
+            }
+        }
+    }
     update()
     draw()
     return !rl.WindowShouldClose()
@@ -67,8 +80,7 @@ game_init :: proc() {
     g_mem = new(Game_Memory)
 
     g_mem^ = Game_Memory {
-        texture  = rl.LoadTexture("assets/atlas.png"),
-        position = {0, 0},
+        texture_atlas = rl.LoadTexture("assets/atlas.png"),
     }
 
     game_hot_reloaded(g_mem)
@@ -76,6 +88,7 @@ game_init :: proc() {
 
 @(export)
 game_shutdown :: proc() {
+    rl.UnloadTexture(g_mem.texture_atlas)
     free(g_mem)
 }
 
@@ -98,6 +111,9 @@ game_memory_size :: proc() -> int {
 @(export)
 game_hot_reloaded :: proc(mem: rawptr) {
     g_mem = (^Game_Memory)(mem)
+
+    rl.UnloadTexture(g_mem.texture_atlas)
+    g_mem.texture_atlas = rl.LoadTexture("assets/atlas.png")
 }
 
 @(export)
