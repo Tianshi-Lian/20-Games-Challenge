@@ -31,4 +31,4 @@ if "%TYPE%" == "rel" (
 if "%TYPE%" == "rld" (
     call build_hot_reload.bat
 )
-rem xcopy /s /d /A /Y assets\ build\assets\
+xcopy /s /d /A /Y assets\ build\assets\
