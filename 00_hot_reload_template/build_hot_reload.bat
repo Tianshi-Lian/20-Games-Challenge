@@ -15,7 +15,7 @@ FOR /F %%x IN ('tasklist /NH /FI "IMAGENAME eq %EXE%"') DO IF %%x == %EXE% set G
 :: This makes sure we start over "fresh" at PDB number 0 when starting up the
 :: game and it also makes sure we don't have so many PDBs laying around.
 if %GAME_RUNNING% == false (
-	del /q game_*.dll 2> nul
+	del /q build\game_*.dll 2> nul
 
 	if exist "pdbs" (
 		del /q pdbs\*.pdb
