@@ -24,6 +24,10 @@ if %GAME_RUNNING% == false (
 	)
 
 	echo 0 > pdbs\pdb_number
+) else (
+    call tools\atlas_builder\atlas_builder.exe
+    xcopy /s /d /A /Y assets\ build\assets\
+    call tools\file_version_builder\file_version_builder.exe
 )
 
 :: Load PDB number from file, increment and store back. For as long as the game
@@ -50,7 +54,7 @@ IF %ERRORLEVEL% NEQ 0 exit /b 1
 
 :: If game.exe already running: Then only compile game.dll and exit cleanly
 if %GAME_RUNNING% == true (
-	echo Game running, hot reloading... && exit /b 1
+    echo Game running, hot reloading... && exit /b 1
 )
 
 :: Build game.exe, which starts the program and loads game.dll och does the logic for hot reloading.

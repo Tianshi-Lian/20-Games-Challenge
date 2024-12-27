@@ -14,9 +14,18 @@
 
 package game
 
+import "core:c/libc"
+import "core:os"
+
 import rl "vendor:raylib"
 
 Rect :: rl.Rectangle
+
+Game_State :: enum {
+    menu,
+    playing,
+    game_over,
+}
 
 WINDOW_WIDTH :: 1600
 WINDOW_HEIGHT :: 900
@@ -30,12 +39,6 @@ WALL_COUNT :: 6
 
 GRAVITY: f32 : 6
 JUMP_STRENGTH: f32 : 1400
-
-Game_State :: enum {
-    menu,
-    playing,
-    game_over,
-}
 
 bounds :: [2]rl.Rectangle {
     {x = 0, y = 0, width = WINDOW_WIDTH, height = 16},
@@ -55,8 +58,7 @@ Game_Memory :: struct {
     texture_atlas: rl.Texture2D,
     point_sound:   rl.Sound,
     fail_sound:    rl.Sound,
-    elapsed_time:  f32,
-    player_frame:  i32,
+    player_anim:   Sprite_Animation,
 }
 g_mem: ^Game_Memory
 
@@ -104,13 +106,6 @@ restart_game :: proc() {
 
 update :: proc() {
     delta_time: f32 = 1.0 / 60.0
-    g_mem.elapsed_time += delta_time
-
-    if g_mem.elapsed_time > 0.2 {
-        g_mem.elapsed_time = 0
-        g_mem.player_frame += 1
-        g_mem.player_frame = g_mem.player_frame % 3
-    }
 
     if game_state == .menu {
         if rl.IsKeyReleased(rl.KeyboardKey.SPACE) {
@@ -123,6 +118,8 @@ update :: proc() {
         }
         return
     }
+
+    animation_update(&g_mem.player_anim, delta_time)
 
     for i := 0; i < WALL_COUNT; i += 2 {
         top_wall := &walls[i]
@@ -189,9 +186,7 @@ draw :: proc() {
             rl.DrawRectangleRec(wall, rl.BLUE)
         }
 
-        // Draw the player frame
-        texture := atlas_textures[Texture_Name(i32(Texture_Name.Owl0) + g_mem.player_frame)]
-        rl.DrawTexturePro(g_mem.texture_atlas, texture.rect, player_rect, {0, 0}, 0, rl.WHITE)
+        animation_draw(g_mem.player_anim, {player_rect.x, player_rect.y})
 
         rl.DrawText(rl.TextFormat("Score: %d", player_score), 10, 20, 20, rl.WHITE)
     case .game_over:
@@ -221,6 +216,16 @@ draw :: proc() {
 
 @(export)
 game_update :: proc() -> bool {
+    if ODIN_DEBUG {
+        for f in file_versions {
+            if mod, mod_err := os.last_write_time_by_name(f.path); mod_err == os.ERROR_NONE {
+                if mod != f.modification_time {
+                    libc.system("pushd .. && build_hot_reload.bat && popd")
+                    break
+                }
+            }
+        }
+    }
     update()
     draw()
     return !rl.WindowShouldClose()
@@ -240,10 +245,9 @@ game_init :: proc() {
 
     g_mem^ = Game_Memory {
         texture_atlas = rl.LoadTexture("assets/atlas.png"),
-        point_sound   = rl.LoadSound("assets/sfx/point.wav"),
-        fail_sound    = rl.LoadSound("assets/sfx/fail.wav"),
-        elapsed_time  = 0,
-        player_frame  = 0,
+        point_sound = rl.LoadSound("assets/sfx/point.wav"),
+        fail_sound = rl.LoadSound("assets/sfx/fail.wav"),
+        player_anim = Sprite_Animation{atlas_anim = .Owl, current_frame = .Owl0, timer = atlas_textures[.Owl0].duration},
     }
 
     game_hot_reloaded(g_mem)
@@ -251,6 +255,9 @@ game_init :: proc() {
 
 @(export)
 game_shutdown :: proc() {
+    rl.UnloadTexture(g_mem.texture_atlas)
+    rl.UnloadSound(g_mem.point_sound)
+    rl.UnloadSound(g_mem.fail_sound)
     free(g_mem)
 }
 
@@ -273,6 +280,9 @@ game_memory_size :: proc() -> int {
 @(export)
 game_hot_reloaded :: proc(mem: rawptr) {
     g_mem = (^Game_Memory)(mem)
+
+    rl.UnloadTexture(g_mem.texture_atlas)
+    g_mem.texture_atlas = rl.LoadTexture("assets/atlas.png")
 }
 
 @(export)
