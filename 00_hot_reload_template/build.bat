@@ -15,13 +15,12 @@ if not exist build\assets (
 	mkdir build\assets
 )
 
-if not exist tools\atlas_builder\atlas_builder.exe (
-    pushd tools
-    call build.bat
-    popd
-)
+pushd tools
+call build.bat
+popd
 
 call tools\atlas_builder\atlas_builder.exe
+call tools\file_version_builder\file_version_builder.exe
 
 if "%TYPE%" == "dbg" (
 	odin build src/release_exe -out:build/game_debug.exe %BUILD_PARAMS% -vet -debug
@@ -32,4 +31,4 @@ if "%TYPE%" == "rel" (
 if "%TYPE%" == "rld" (
     call build_hot_reload.bat
 )
-xcopy /s /d /A /Y assets\ build\assets\
+rem xcopy /s /d /A /Y assets\ build\assets\
