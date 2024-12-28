@@ -19,13 +19,14 @@ pushd tools
 call build.bat
 popd
 
-call tools\atlas_builder\atlas_builder.exe
-call tools\file_version_builder\file_version_builder.exe
-
 if "%TYPE%" == "dbg" (
+    call tools\atlas_builder\atlas_builder.exe
+    call tools\file_version_builder\file_version_builder.exe
 	odin build src/release_exe -out:build/game_debug.exe %BUILD_PARAMS% -vet -debug
 )
 if "%TYPE%" == "rel" (
+    call tools\atlas_builder\atlas_builder.exe
+    call tools\file_version_builder\file_version_builder.exe
 	odin build src/release_exe -out:build/game_release.exe %BUILD_PARAMS% -vet -no-bounds-check -o:speed -subsystem:windows
 )
 if "%TYPE%" == "rld" (

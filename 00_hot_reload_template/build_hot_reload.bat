@@ -3,6 +3,10 @@
 set GAME_RUNNING=false
 set EXE=game_hot_reload.exe
 
+call tools\atlas_builder\atlas_builder.exe
+xcopy /s /d /A /Y assets\ build\assets\
+call tools\file_version_builder\file_version_builder.exe
+
 :: Check if game is running
 FOR /F %%x IN ('tasklist /NH /FI "IMAGENAME eq %EXE%"') DO IF %%x == %EXE% set GAME_RUNNING=true
 
@@ -24,10 +28,6 @@ if %GAME_RUNNING% == false (
 	)
 
 	echo 0 > pdbs\pdb_number
-) else (
-    call tools\atlas_builder\atlas_builder.exe
-    xcopy /s /d /A /Y assets\ build\assets\
-    call tools\file_version_builder\file_version_builder.exe
 )
 
 :: Load PDB number from file, increment and store back. For as long as the game

@@ -37,11 +37,11 @@ import stbtt "vendor:stb/truetype"
 ATLAS_SIZE :: 1024
 
 // Path to output final atlas PNG to
-ATLAS_PNG_OUTPUT_PATH :: "assets/atlas.png"
+ATLAS_PNG_OUTPUT_PATH :: "assets/texture_atlas.png"
 
 // Path to output atlas Odin metadata file to. Compile this as part of your game to get metadata
 // about where in atlas your textures etc are.
-ATLAS_ODIN_OUTPUT_PATH :: "src/game/atlas.odin"
+ATLAS_ODIN_OUTPUT_PATH :: "src/game/texture_atlas.odin"
 
 // Set to false to not crop atlas after generation.
 ATLAS_CROP :: true

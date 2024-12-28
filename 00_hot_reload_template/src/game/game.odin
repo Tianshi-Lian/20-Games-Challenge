@@ -21,10 +21,9 @@ import rl "vendor:raylib"
 
 Rect :: rl.Rectangle
 
-Game_Memory :: struct {
-    texture_atlas: rl.Texture2D,
-}
+Game_Memory :: struct {}
 g_mem: ^Game_Memory
+g_textures: rl.Texture2D
 
 WINDOW_WIDTH :: 1600
 WINDOW_HEIGHT :: 900
@@ -39,7 +38,7 @@ draw :: proc() {
 
     rl.ClearBackground({150, 190, 220, 255})
 
-    rl.DrawTextureRec(g_mem.texture_atlas, atlas_textures[.Test].rect, {0, 0}, rl.WHITE)
+    rl.DrawTextureRec(g_textures, atlas_textures[.Test].rect, {200, 0}, rl.WHITE)
 
     rl.DrawFPS(WINDOW_WIDTH - 100, 10)
 }
@@ -73,16 +72,15 @@ game_init_window :: proc() {
 game_init :: proc() {
     g_mem = new(Game_Memory)
 
-    g_mem^ = Game_Memory {
-        texture_atlas = rl.LoadTexture("assets/atlas.png"),
-    }
+    g_mem^ = Game_Memory{}
+    g_textures = rl.LoadTexture("assets/texture_atlas.png")
 
     game_hot_reloaded(g_mem)
 }
 
 @(export)
 game_shutdown :: proc() {
-    rl.UnloadTexture(g_mem.texture_atlas)
+    rl.UnloadTexture(g_textures)
     free(g_mem)
 }
 
@@ -106,8 +104,11 @@ game_memory_size :: proc() -> int {
 game_hot_reloaded :: proc(mem: rawptr) {
     g_mem = (^Game_Memory)(mem)
 
-    rl.UnloadTexture(g_mem.texture_atlas)
-    g_mem.texture_atlas = rl.LoadTexture("assets/atlas.png")
+    new_textures := rl.LoadTexture("assets/texture_atlas.png")
+    if new_textures.width != g_textures.width || new_textures.height != g_textures.height {
+        rl.UnloadTexture(g_textures)
+        g_textures = new_textures
+    }
 }
 
 @(export)

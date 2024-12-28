@@ -45,7 +45,7 @@ animation_length :: proc(anim: Animation_Name) -> f32 {
     return l
 }
 
-animation_draw :: proc(anim: Sprite_Animation, pos: rl.Vector2) {
+animation_draw :: proc(texture_atlas: rl.Texture2D, anim: Sprite_Animation, pos: rl.Vector2) {
     if anim.current_frame == .None {
         return
     }
@@ -54,5 +54,5 @@ animation_draw :: proc(anim: Sprite_Animation, pos: rl.Vector2) {
 
     offset_pos := pos + {texture.offset_left, texture.offset_top}
 
-    rl.DrawTextureRec(g_mem.texture_atlas, texture.rect, offset_pos, rl.WHITE)
+    rl.DrawTextureRec(texture_atlas, texture.rect, offset_pos, rl.WHITE)
 }
