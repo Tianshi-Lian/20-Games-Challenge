@@ -21,12 +21,6 @@ import rl "vendor:raylib"
 
 Rect :: rl.Rectangle
 
-Game_State :: enum {
-    menu,
-    playing,
-    game_over,
-}
-
 Game_Memory :: struct {
     texture_atlas: rl.Texture2D,
 }
