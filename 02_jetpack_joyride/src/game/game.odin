@@ -22,6 +22,7 @@ import rl "vendor:raylib"
 Rect :: rl.Rectangle
 
 Game_Memory :: struct {}
+
 g_mem: ^Game_Memory
 g_textures: rl.Texture2D
 
@@ -38,7 +39,7 @@ draw :: proc() {
 
     rl.ClearBackground({150, 190, 220, 255})
 
-    rl.DrawTextureRec(g_textures, atlas_textures[.Test].rect, {200, 0}, rl.WHITE)
+    rl.DrawTextureRec(g_textures, atlas_textures[.Test].rect, {0, 0}, rl.WHITE)
 
     rl.DrawFPS(WINDOW_WIDTH - 100, 10)
 }

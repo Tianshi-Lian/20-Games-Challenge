@@ -17,22 +17,28 @@ when ODIN_OS == .Windows {
     DLL_EXT :: ".so"
 }
 
+last_written_file: string = ""
+
 // We copy the DLL because using it directly would lock it, which would prevent
 // the compiler from writing to it.
 copy_dll :: proc(to: string) -> bool {
     exit: i32
+    if last_written_file == to {
+        return false
+    }
+
     when ODIN_OS == .Windows {
-        exit = libc.system(fmt.ctprintf("copy game.dll {0}", to))
+        exit = libc.system(fmt.ctprintf("copy game.dll {0} >nul 2>&1", to))
     } else {
         exit = libc.system(fmt.ctprintf("cp game" + DLL_EXT + " {0}", to))
     }
 
-    if exit != 0 {
-        fmt.printfln("Failed to copy game" + DLL_EXT + " to {0}", to)
-        return false
+    if exit == 0 {
+        fmt.println("INFO: New DLL written to ", to)
+        return true
     }
 
-    return true
+    return false
 }
 
 Game_API :: struct {
