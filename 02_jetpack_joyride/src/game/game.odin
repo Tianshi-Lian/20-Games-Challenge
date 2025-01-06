@@ -21,28 +21,6 @@ import rl "vendor:raylib"
 
 Rect :: rl.Rectangle
 
-Bullet :: struct {
-    active: bool,
-    rect:   rl.Rectangle,
-    angle:  f32,
-}
-
-Enemy :: struct {
-    active: bool,
-    rect:   rl.Rectangle,
-}
-
-Game_Memory :: struct {
-    player:       rl.Rectangle,
-    score:        int,
-    score_timer:  f32,
-    bounds:       [2]rl.Rectangle,
-    bullets:      [32]Bullet,
-    bullet_timer: f32,
-    enemies:      [8]Enemy,
-    enemy_timer:  f32,
-}
-
 WINDOW_WIDTH :: 1600
 WINDOW_HEIGHT :: 900
 
@@ -53,10 +31,49 @@ BULLET_SPAWN_RATE :: 0.1
 BULLET_SPEED :: 800
 
 ENEMY_SPAWN_RATE :: 0.001
-ENEMY_SPEED :: 400
+ENEMY_SPEED_MIN :: 300
+ENEMY_SPEED_MAX :: 600
+
+BULLET_COUNT :: 32
+SOLDIER_COUNT :: 8
+PLANE_COUNT :: 4
+ENTITY_COUNT :: BULLET_COUNT + SOLDIER_COUNT + PLANE_COUNT
+
+Entity_Type :: enum {
+    Bullet,
+    Soldier,
+    Plane,
+}
+
+Entity :: struct {
+    type:         Entity_Type,
+    active:       bool,
+    position:     rl.Vector2,
+    size:         rl.Vector2,
+    acceleration: rl.Vector2,
+    texture_rect: rl.Rectangle,
+}
+
+Game_Memory :: struct {
+    player:             rl.Rectangle,
+    score:              int,
+    score_timer:        f32,
+    bounds:             [2]rl.Rectangle,
+    entities:           [ENTITY_COUNT]Entity,
+    bullets:            [BULLET_COUNT]^Entity,
+    soldiers:           [SOLDIER_COUNT]^Entity,
+    planes:             [PLANE_COUNT]^Entity,
+    bullet_timer:       f32,
+    enemy_staff_timer:  f32,
+    enemy_planes_timer: f32,
+}
 
 g_mem: ^Game_Memory
 g_textures: rl.Texture2D
+
+player_animation: Sprite_Animation = animation_create(.Jetpack_Floor_Run)
+
+background: Atlas_Texture = atlas_textures[.Sky_Color]
 
 init :: proc() {
     g_textures = rl.LoadTexture("assets/texture_atlas.png")
@@ -65,19 +82,34 @@ init :: proc() {
     g_mem.bounds[0] = rl.Rectangle{0, 0, WINDOW_WIDTH, 50}
     g_mem.bounds[1] = rl.Rectangle{0, WINDOW_HEIGHT - 50, WINDOW_WIDTH, 50}
 
-    for &bullet in g_mem.bullets {
-        bullet.active = false
-        bullet.rect = rl.Rectangle {
-            x      = g_mem.player.x + g_mem.player.width / 2 - 12.5,
-            y      = g_mem.player.y,
-            width  = 25,
-            height = 25,
-        }
-    }
+    for &entity, index in g_mem.entities {
+        if index < BULLET_COUNT {
+            entity.type = .Bullet
+            entity.active = false
+            entity.position = {g_mem.player.x + g_mem.player.width / 2 - 12.5, g_mem.player.y}
+            entity.size = {25, 25}
+            entity.acceleration = {0, BULLET_SPEED}
+            g_mem.bullets[index] = &entity
+        } else if index < BULLET_COUNT + SOLDIER_COUNT {
+            entity.type = .Soldier
+            entity.active = false
+            entity.position = {0, 0}
+            entity.size = {75, 75}
+            entity.acceleration = {-f32(rl.GetRandomValue(ENEMY_SPEED_MIN, ENEMY_SPEED_MAX)), 0}
+            g_mem.soldiers[index - BULLET_COUNT] = &entity
+        } else {
+            plane_color := rl.GetRandomValue(0, 2)
+            texture_rect := atlas_textures[Texture_Name(i32(Texture_Name.Plane_1_Blue) + plane_color)].rect
+            texture_rect.width = -texture_rect.width
 
-    for &enemy in g_mem.enemies {
-        enemy.active = false
-        enemy.rect = rl.Rectangle{0, 0, 0, 0}
+            entity.type = .Plane
+            entity.active = false
+            entity.position = {WINDOW_WIDTH, 400}
+            entity.size = {texture_rect.width, texture_rect.height}
+            entity.acceleration = {-f32(rl.GetRandomValue(ENEMY_SPEED_MIN, ENEMY_SPEED_MAX)), 0}
+            entity.texture_rect = texture_rect
+            g_mem.planes[index - BULLET_COUNT - SOLDIER_COUNT] = &entity
+        }
     }
 }
 
@@ -90,13 +122,29 @@ update :: proc() {
         g_mem.score += 1
     }
 
-    g_mem.enemy_timer -= delta_time
-    if g_mem.enemy_timer < 0 {
-        g_mem.enemy_timer = f32(rl.GetRandomValue(1, 8))
-        for &enemy in g_mem.enemies {
-            if !enemy.active {
-                enemy.active = true
-                enemy.rect = rl.Rectangle{WINDOW_WIDTH, g_mem.bounds[1].y - 75, 75, 75}
+    g_mem.enemy_staff_timer -= delta_time
+    if g_mem.enemy_staff_timer < 0 {
+        g_mem.enemy_staff_timer = f32(rl.GetRandomValue(1, 8))
+        for &entity in g_mem.soldiers {
+            if entity.type == .Soldier && !entity.active {
+                entity.active = true
+                entity.position = {WINDOW_WIDTH, g_mem.bounds[1].y - entity.size.x}
+                break
+            }
+        }
+    }
+
+    g_mem.enemy_planes_timer -= delta_time
+    if g_mem.enemy_planes_timer < 0 {
+        g_mem.enemy_planes_timer = f32(rl.GetRandomValue(1, 4))
+        for &entity in g_mem.planes {
+            if entity.type == .Plane && !entity.active {
+                entity.active = true
+                plane_color := rl.GetRandomValue(0, 2)
+                texture_rect := atlas_textures[Texture_Name(i32(Texture_Name.Plane_1_Blue) + plane_color)].rect
+                texture_rect.width = -texture_rect.width
+                entity.texture_rect = texture_rect
+                entity.position = {WINDOW_WIDTH, 400}
                 break
             }
         }
@@ -116,47 +164,54 @@ update :: proc() {
         if g_mem.bullet_timer > BULLET_SPAWN_RATE {
             g_mem.bullet_timer = 0
             for &bullet in g_mem.bullets {
-                if !bullet.active {
+                if bullet.type == .Bullet && !bullet.active {
                     bullet.active = true
-                    bullet.rect.x = g_mem.player.x + g_mem.player.width / 2 - 12.5
-                    bullet.rect.y = g_mem.player.y
-                    bullet.angle = f32(rl.GetRandomValue(-3, 3)) / 10
+                    bullet.position.x = g_mem.player.x + g_mem.player.width / 2 - 12.5
+                    bullet.position.y = g_mem.player.y
+                    bullet.acceleration.x = f32(rl.GetRandomValue(-100, 100))
                     break
                 }
             }
         }
     }
 
-    for &bullet in g_mem.bullets {
-        if bullet.active {
-            bullet_velocity := BULLET_SPEED * delta_time * rl.Vector2{bullet.angle, 1}
-            bullet.rect.x += bullet_velocity.x
-            bullet.rect.y += bullet_velocity.y
+    if g_mem.player.y < g_mem.bounds[1].y - g_mem.player.height {
+        if player_animation.atlas_anim != .Jetpack_Flying {
+            player_animation = animation_create(.Jetpack_Flying)
+        }
+    } else {
+        if player_animation.atlas_anim != .Jetpack_Floor_Run {
+            player_animation = animation_create(.Jetpack_Floor_Run)
+        }
+    }
 
-            for &enemy in g_mem.enemies {
-                if enemy.active {
-                    if rl.CheckCollisionRecs(bullet.rect, enemy.rect) {
+    for &entity in g_mem.entities {
+        if entity.active {
+            entity.position += entity.acceleration * delta_time
+        }
+    }
+
+    for &bullet in g_mem.bullets {
+        if bullet.type == .Bullet && bullet.active {
+            for &enemy in g_mem.soldiers {
+                if enemy.type == .Soldier && enemy.active {
+                    if rl.CheckCollisionRecs(
+                        {bullet.position.x, bullet.position.y, bullet.size.x, bullet.size.y},
+                        {enemy.position.x, enemy.position.y, enemy.size.x, enemy.size.y},
+                    ) {
                         enemy.active = false
                         bullet.active = false
                     }
                 }
             }
 
-            if bullet.rect.y > WINDOW_HEIGHT {
+            if bullet.position.y > WINDOW_HEIGHT {
                 bullet.active = false
             }
         }
     }
 
-    for &enemy in g_mem.enemies {
-        if enemy.active {
-            enemy.rect.x -= ENEMY_SPEED * delta_time
-        }
-
-        if enemy.rect.x < 0 - enemy.rect.width {
-            enemy.active = false
-        }
-    }
+    animation_update(&player_animation, delta_time)
 }
 
 draw :: proc() {
@@ -165,24 +220,26 @@ draw :: proc() {
 
     rl.ClearBackground({150, 190, 220, 255})
 
-    for bullet in g_mem.bullets {
-        if bullet.active {
-            rl.DrawRectangleRec(bullet.rect, {200, 0, 0, 255})
-        }
-    }
+    rl.DrawTexturePro(g_textures, background.rect, {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}, {0, 0}, 0, {255, 255, 255, 255})
 
     for b in g_mem.bounds {
         rl.DrawRectangleRec(b, {0, 0, 255, 255})
     }
 
-    for enemy in g_mem.enemies {
-        if enemy.active {
-            rl.DrawRectangleRec(enemy.rect, {0, 255, 0, 255})
+    for entity in g_mem.entities {
+        if entity.active {
+            switch entity.type {
+            case .Bullet, .Soldier:
+                rl.DrawRectangleV(entity.position, entity.size, {200, 0, 0, 255}) // TODO: Different colours
+            case .Plane:
+                rl.DrawTextureRec(g_textures, entity.texture_rect, entity.position, {255, 255, 255, 255})
+            }
         }
     }
 
-    rl.DrawRectangleRec(g_mem.player, {255, 0, 0, 255})
+    //rl.DrawRectangleRec(g_mem.player, {255, 0, 0, 255})
 
+    animation_draw(g_textures, player_animation, {g_mem.player.x - 130, g_mem.player.y - 160})
 
     rl.DrawText(rl.TextFormat("Score: %d", g_mem.score), 10, 60, 20, {255, 255, 255, 255})
     rl.DrawFPS(WINDOW_WIDTH - 100, 10)
