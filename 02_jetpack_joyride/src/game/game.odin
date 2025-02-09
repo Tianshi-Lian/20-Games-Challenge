@@ -54,6 +54,7 @@ update :: proc() {
         state_playing_update()
     case .Gameover:
         state_gameover_update()
+    }
 }
 
 draw :: proc() {
