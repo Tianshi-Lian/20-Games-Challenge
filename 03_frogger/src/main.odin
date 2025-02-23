@@ -4,18 +4,68 @@ import rl "vendor:raylib"
 
 main :: proc() {
     window_width :: 1600
-    window_height :: 900
+    window_height :: 832
+    tile_size :: 64
+    tile_count_x :: window_width / tile_size
+    tile_count_y :: window_height / tile_size
+
+    tilemap: [tile_count_y][tile_count_x]int = {
+        {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    }
 
     rl.InitWindow(window_width, window_height, "Frogger")
     defer rl.CloseWindow()
+    rl.SetTargetFPS(60)
+
+    frog_position: rl.Vector2 = {12, 12}
 
     for (!rl.WindowShouldClose()) {
+        if rl.IsKeyPressed(rl.KeyboardKey.D) {
+            frog_position.x += 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.A) {
+            frog_position.x -= 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.W) {
+            frog_position.y -= 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.S) {
+            frog_position.y += 1
+        }
+
         rl.BeginDrawing()
         defer rl.EndDrawing()
 
         rl.ClearBackground(rl.LIGHTGRAY)
 
-        msg_width := rl.MeasureText("Welcome to Frogger!", 20)
-        rl.DrawText("Welcome to Frogger!", window_width / 2 - msg_width / 2, 450, 20, rl.BLACK)
+        for y in 0 ..< tile_count_y {
+            for x in 0 ..< tile_count_x {
+                color: rl.Color = rl.VIOLET
+                switch tile := tilemap[y][x]; tile {
+                case 0:
+                    color = rl.BROWN
+                case 1:
+                    color = rl.DARKGRAY
+                case 2:
+                    color = rl.BLUE
+                case 3:
+                    color = rl.LIME
+                case 4:
+                    color = rl.DARKBLUE
+                }
+                rl.DrawRectangle(i32(x * tile_size), i32(y * tile_size), tile_size, tile_size, color)
+            }
+        }
+
+        rl.DrawRectangle(i32(frog_position.x * tile_size), i32(frog_position.y * tile_size), tile_size, tile_size, rl.GREEN)
     }
 }
