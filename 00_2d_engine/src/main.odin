@@ -33,11 +33,11 @@ tile_set_load :: proc(filepath: string, tile_size: i32) -> Tile_Set {
         result.name = name
     }
 
-    columns := result.texture.width / tile_size
-    rows := result.texture.height / tile_size
+    width := result.texture.width / tile_size
+    height := result.texture.height / tile_size
 
-    for y in 0 ..< rows {
-        for x in 0 ..< columns {
+    for y in 0 ..< height {
+        for x in 0 ..< width {
             texture_rect := rl.Rectangle{f32(x * tile_size), f32(y * tile_size), f32(tile_size), f32(tile_size)}
             append(&result.tiles, texture_rect)
         }
