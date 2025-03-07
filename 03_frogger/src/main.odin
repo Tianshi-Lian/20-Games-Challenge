@@ -29,18 +29,22 @@ main :: proc() {
     defer rl.CloseWindow()
     rl.SetTargetFPS(60)
 
-    frog_position: rl.Vector2 = {12, 12}
+    frog_position := rl.Vector2{12, 12}
 
     for (!rl.WindowShouldClose()) {
-        if rl.IsKeyPressed(rl.KeyboardKey.D) {
-            frog_position.x += 1
-        } else if rl.IsKeyPressed(rl.KeyboardKey.A) {
-            frog_position.x -= 1
-        } else if rl.IsKeyPressed(rl.KeyboardKey.W) {
-            frog_position.y -= 1
-        } else if rl.IsKeyPressed(rl.KeyboardKey.S) {
-            frog_position.y += 1
+        movement := rl.Vector2{0, 0}
+        if rl.IsKeyPressed(rl.KeyboardKey.D) || rl.IsKeyPressed(rl.KeyboardKey.RIGHT) {
+            movement.x += 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.A) || rl.IsKeyPressed(rl.KeyboardKey.LEFT) {
+            movement.x -= 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.W) || rl.IsKeyPressed(rl.KeyboardKey.UP) {
+            movement.y -= 1
+        } else if rl.IsKeyPressed(rl.KeyboardKey.S) || rl.IsKeyPressed(rl.KeyboardKey.DOWN) {
+            movement.y += 1
         }
+
+        frog_position.x = clamp(frog_position.x + movement.x, 0, tile_count_x - 1)
+        frog_position.y = clamp(frog_position.y + movement.y, 0, tile_count_y - 1)
 
         rl.BeginDrawing()
         defer rl.EndDrawing()
