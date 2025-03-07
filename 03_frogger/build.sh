@@ -9,6 +9,10 @@ mkdir -p assets
 mkdir -p bin/assets
 mkdir -p bin-int
 
+if [ $TYPE=="" ]; then
+    TYPE="dbg"
+fi
+
 if [ $TYPE=="dbg" ]; then
     odin build src -out:"bin/${EXE_NAME}_${TYPE}" $BULD_PARAMS -vet -debug
 fi
