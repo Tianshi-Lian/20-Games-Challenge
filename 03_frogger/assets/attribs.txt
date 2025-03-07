@@ -1,0 +1,4 @@
+Graphics:
+  https://opengameart.org/users/theminesareshakin
+  http://jakemeinershagen.com
+  Modification: Combined assets into a single texture atlas
